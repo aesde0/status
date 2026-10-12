@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Garázs Felügyelet</title>
+    <!-- Apple Web App beállítások -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            font-size: 22px;
+            margin-bottom: 25px;
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+        .garage-card {
+            background: #1e1e1e;
+            border-radius: 16px;
+            padding: 20px;
+            width: 85%;
+            max-width: 320px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid #2a2a2a;
+        }
+        .garage-info h2 {
+            font-size: 18px;
+            margin: 0 0 5px 0;
+        }
+        .status-text {
+            font-size: 14px;
+            color: #888;
+            margin: 0;
+        }
+        .status-badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .closed {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+        .open {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+        .unknown {
+            background-color: rgba(0, 122, 255, 0.2);
+            color: #007aff;
+            border: 1px solid #007aff;
+        }
+        #update-time {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #555;
+        }
+        .refresh-btn {
+            margin-top: 15px;
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🚗 Garázs Státusz</h1>
+
+    <!-- Garázs 1 Kártya -->
+    <div class="garage-card">
+        <div class="garage-info">
+            <h2>Garázs 1</h2>
+            <p class="status-text" id="time1">Frissítésre vár...</p>
+        </div>
+        <div id="badge1" class="status-badge unknown">Betöltés...</div>
+    </div>
+
+    <!-- Garázs 2 Kártya -->
+    <div class="garage-card">
+        <div class="garage-info">
+            <h2>Garázs 2</h2>
+            <p class="status-text" id="time2">Frissítésre vár...</p>
+        </div>
+        <div id="badge2" class="status-badge unknown">Betöltés...</div>
+    </div>
+
+    <button class="refresh-btn" onclick="fetchGarageStatus()">Frissítés most</button>
+    <div id="update-time">Utolsó lekérdezés: Még nem volt</div>
+
+    <script>
+        // Cseréld ki a saját ThingSpeak Channel ID-dra
+        const CHANNEL_ID = "3400734";  
+
+        async function fetchGarageStatus() {
+            // Nyilvános csatornánál nincs szükség API kulcsra a feed lekéréséhez
+            const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                updateGarageUI(1, data.field1, data.created_at);
+                updateGarageUI(2, data.field2, data.created_at);
+
+                const now = new Date().toLocaleTimeString();
+                document.getElementById("update-time").innerText = "Utolsó lekérdezés: " + now;
+            } catch (error) {
+                console.error("Hiba az adatok lekérésekor:", error);
+            }
+        }
+
+        function updateGarageUI(garageNum, value, timestamp) {
+            const badge = document.getElementById(`badge${garageNum}`);
+            const timeText = document.getElementById(`time${garageNum}`);
+
+            if (value === "0" || value === 0) {
+                badge.className = "status-badge closed";
+                badge.innerText = "Zárva 🟢";
+            } else if (value === "1" || value === 1) {
+                badge.className = "status-badge open";
+                badge.innerText = "Nyitva 🔴";
+            } else {
+                badge.className = "status-badge unknown";
+                badge.innerText = "Nincs adat";
+            }
+
+            if (timestamp) {
+                const date = new Date(timestamp);
+                timeText.innerText = "Módosítva: " + date.toLocaleTimeString();
+            }
+        }
+
+        // Automatikus frissítés 30 másodpercenként
+        setInterval(fetchGarageStatus, 30000);
+        
+        // Első betöltés
+        fetchGarageStatus();
+    </script>
+</body>
+</html>
