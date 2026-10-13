@@ -115,27 +115,21 @@
 
     <button class="refresh-btn" onclick="fetchGarageStatus()">Frissítés most</button>
     <div id="update-time">Utolsó lekérdezés: Még nem volt</div>
-
-    <!-- Default Statcounter code for status https://aesde0.github.io/status/ -->
-    <script type="text/javascript">
-    var sc_project=13359681; 
-    var sc_invisible=1; 
-    var sc_security="dbac49e8"; 
-    </script>
-    <script type="text/javascript"
-    src="https://www.statcounter.com/counter/counter.js" async></script>
-    <noscript><div class="statcounter"><a title="látogató számláló"
-    href="https://www.statcounter.hu/" target="_blank"><img class="statcounter"
-    src="https://c.statcounter.com/13359681/0/dbac49e8/1/" alt="látogató
-    számláló" referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
-    <!-- End of Statcounter Code -->
     
     <script>
-        // Cseréld ki a saját ThingSpeak Channel ID-dra
         const CHANNEL_ID = "3400734";  
 
+        function logVisit() {
+            const scriptURL = "https://script.google.com/macros/s/AKfycbzRgXgxdji9tWPFfcHLAAEa6YKX6o6QAwxFs5jt7Gs69fsZm5R86uZ6UqOGEbIUmn26yQ/exec"; 
+            const userAgent = navigator.userAgent;
+            
+            fetch(`${scriptURL}?ua=${encodeURIComponent(userAgent)}`, { 
+                method: 'POST',
+                mode: 'no-cors' 
+            }).catch(err => console.log("Naplózási hiba:", err));
+        }
+        
         async function fetchGarageStatus() {
-            // Nyilvános csatornánál nincs szükség API kulcsra a feed lekéréséhez
             const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json`;
             
             try {
